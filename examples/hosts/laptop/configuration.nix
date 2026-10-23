@@ -39,7 +39,10 @@
 
   # Illustrative only: a real host has its hardware configuration, a boot
   # loader and file systems
-  fileSystems."/".device = "/dev/disk/by-label/nixos";
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
   boot.loader.systemd-boot.enable = true;
   system.stateVersion = "26.05";
 }
