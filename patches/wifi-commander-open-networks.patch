@@ -1,0 +1,43 @@
+--- a/src/nmcli/scan-wifi.tsx
++++ b/src/nmcli/scan-wifi.tsx
+@@ -12,6 +12,12 @@
+   type WifiNetwork,
+ } from "../utils/wifi-helpers-nmcli";
+ 
++// nmcli prints an empty SECURITY column as "--" in its table output
++const isOpen = (security: string) => {
++  const s = security.trim().toLowerCase();
++  return s === "" || s === "--" || s === "open";
++};
++
+ interface ScanResult {
+   networks: WifiNetwork[];
+   isLoading: boolean;
+@@ -74,8 +80,9 @@
+     // Check if this network is already saved
+     const isSaved = savedNetworks.some((network) => network.name === ssid);
+ 
+-    // If the network is not secure, connect directly
+-    if (!security || security.toLowerCase() === "open") {
++    // If the network is not secure, connect directly. nmcli's table prints
++    // "--" for an empty SECURITY column, so that is an open network too.
++    if (isOpen(security)) {
+       await showToast({
+         title: "Connecting...",
+         message: `Attempting to connect to open network ${ssid}`,
+@@ -156,12 +163,9 @@
+     return Icon.Wifi;
+   };
+ 
+-  const getSecurityIcon = (security: string) => {
+-    if (security.includes("WPA2")) return Icon.Lock;
+-    if (security.includes("WPA1")) return Icon.Lock;
+-    if (security.includes("WEP")) return Icon.Lock;
+-    return Icon.LockUnlocked;
+-  };
++  // Anything nmcli names (WPA1/2/3, WEP, 802.1X, OWE) needs credentials or
++  // at least is not open; only an empty column is
++  const getSecurityIcon = (security: string) => (isOpen(security) ? Icon.LockUnlocked : Icon.Lock);
+ 
+   useEffect(() => {
+     loadWifiDeviceData();
